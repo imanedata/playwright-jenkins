@@ -6,14 +6,24 @@ pipeline {
         }
     }
     stages {
-        stage('Install dependencies') {
+        stage('Install Java & Allure') {
             steps {
+                sh 'apt-get update && apt-get install -y openjdk-17-jdk'
+                sh 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64'
+                sh 'echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> ~/.bashrc'
+                
+                sh 'npm install -g allure-commandline --save-dev'
+                sh 'echo "PATH=$PATH:$(npm bin -g)" >> ~/.bashrc'
+            }
+        }
+        stage('Checkout code & Install dependencies') {
+            steps {
+                git 'https://github.com/eroshenkoam/allure-example.git'
                 sh 'npm ci'
             }
         }
-        stage('Install Allure CLI') {
+        stage('Run tests') {
             steps {
-                git 'https://github.com/eroshenkoam/allure-example.git'
                 sh './gradlew clean test'
             }
         }
@@ -25,10 +35,10 @@ pipeline {
     }
     post {
         always {
-                    allure includeProperties:
-                     false,
-                     jdk: '',
-                     results: [[path: 'build/allure-results']]
-                }
+            archiveArtifacts artifacts: 'build/allure-results/**', fingerprint: true
+            archiveArtifacts artifacts: 'allure-report/**', fingerprint: true
+            
+            allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
+        }
     }
 }
