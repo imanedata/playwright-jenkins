@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'mcr.microsoft.com/playwright:v1.51.0-noble'
-            args '-u root' // This will run the container as root to allow installing Allure
+            args '-u root' // Run as root to install Allure
         }
     }
     stages {
@@ -26,7 +26,7 @@ pipeline {
         }
         stage('run tests') {
             steps {
-                sh 'npx playwright test'
+                sh 'npx playwright test --reporter=html --output=playwright-report'
             }
         }
         stage('génération de rapport') {
