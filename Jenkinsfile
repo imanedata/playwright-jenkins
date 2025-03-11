@@ -2,10 +2,21 @@ pipeline {
     agent {
         docker {
             image 'mcr.microsoft.com/playwright:v1.51.0-noble'
-            args '-u root' // Run as root to install Allure
+            args '-u root' // Run as root to install Allure and Java
         }
     }
     stages {
+        stage('Install Java') {
+            steps {
+                script {
+                    // Install OpenJDK 11 (or choose another version as necessary)
+                    sh 'apt-get update && apt-get install -y openjdk-11-jdk'
+                    // Set JAVA_HOME
+                    sh 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+                    sh 'export PATH=$JAVA_HOME/bin:$PATH'
+                }
+            }
+        }
         stage('Install Allure') {
             steps {
                 script {
@@ -21,6 +32,7 @@ pipeline {
         stage('Build') {
             steps {
                 git 'https://github.com/eroshenkoam/allure-example.git'
+                // Ensure Java is available before running gradle
                 sh './gradlew clean test'
             }
         }
