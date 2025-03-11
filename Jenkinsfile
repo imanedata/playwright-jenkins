@@ -2,9 +2,17 @@ pipeline {
     agent {
         docker {
             image 'mcr.microsoft.com/playwright:v1.51.0-noble'
+            args '-u root' // This will run the container as root to allow installing Allure
         }
     }
     stages {
+        stage('Install Allure') {
+            steps {
+                script {
+                    sh 'npm install -g allure-commandline'
+                }
+            }
+        }
         stage('install dependencies') {
             steps {
                 sh 'npm ci'
@@ -15,14 +23,12 @@ pipeline {
                 git 'https://github.com/eroshenkoam/allure-example.git'
                 sh './gradlew clean test'
             }
-        } // <-- Added missing closing bracket here
-
+        }
         stage('run tests') {
             steps {
                 sh 'npx playwright test'
             }
         }
-       
         stage('génération de rapport') {
             steps {
                 sh 'PLAYWRIGHT_JUNIT_OUTPUT_NAME=results.xml npx playwright test --reporter=junit'
@@ -42,12 +48,10 @@ pipeline {
                 alwaysLinkToLastBuild: false,
                 keepAll: true,
                 reportDir: 'playwright-report',
-                reportFiles: 'results.xml',
+                reportFiles: 'index.html',
                 reportName: 'Playwright Report'
             ])
-            allure includeProperties: false,
-            jdk: '',
-            results: [[path: 'build/allure-results']]
+            allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
         }
     }
 }
