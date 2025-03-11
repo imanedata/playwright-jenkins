@@ -13,12 +13,8 @@ pipeline {
         }
         stage('Install Allure CLI') {
             steps {
-                sh 'npm install -g allure-commandline --save-dev'
-            }
-        }
-        stage('Run tests') {
-            steps {
-                sh 'npx playwright test --reporter=junit,html'
+                git 'https://github.com/eroshenkoam/allure-example.git'
+                sh './gradlew clean test'
             }
         }
         stage('Génération de rapport Allure') {
@@ -29,23 +25,10 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'results.xml', fingerprint: true
-            archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
-            archiveArtifacts artifacts: 'allure-report/**', fingerprint: true
-
-            publishHTML(target: [
-                allowMissing: false,
-                alwaysLinkToLastBuild: false,
-                keepAll: true,
-                reportDir: 'playwright-report',
-                reportFiles: 'index.html',
-                reportName: 'Playwright Report'
-            ])
-            
-            allure includeProperties: false, jdk: '', results: [[path: 'allure-results']]
-        }
-        cleanup {
-            cleanWs()
-        }
+                    allure includeProperties:
+                     false,
+                     jdk: '',
+                     results: [[path: 'build/allure-results']]
+                }
     }
 }
