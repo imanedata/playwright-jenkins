@@ -4,25 +4,21 @@ pipeline {
             image 'playwright'
         }
     }
-    stages{
-        stages{
-        stage('installation'){
-            steps{
-                sh 'npm-ci'
+    stages {
+        stage('Installation') {
+            steps {
+                sh 'npm ci'
             }
         }
-        stage('run'){
-            steps{
-                sh 'npx playwright test Runs the end-to-end tests'
+        stage('Run Tests') {
+            steps {
+                sh 'npx playwright test'
             }
         }
-        stage('run chrome '){
-            steps{
+        stage('Run Chrome Tests') {
+            steps {
                 sh 'npx playwright test --project=chromium'
             }
         }
-        
     }
-    
-
 }
