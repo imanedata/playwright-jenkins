@@ -15,11 +15,7 @@ pipeline {
                 sh 'npx playwright test'
             }
         }
-        stage('génération de rapport') {
-            steps {
-                sh 'npx playwright test --reporter=html'
-            }
-        }
+       
         stage('génération de rapport') {
             steps {
                 sh 'npx playwright test --reporter=line'
