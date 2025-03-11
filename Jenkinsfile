@@ -18,7 +18,7 @@ pipeline {
        
         stage('génération de rapport') {
             steps {
-                sh 'npx playwright test --reporter=line'
+                sh 'PLAYWRIGHT_JUNIT_OUTPUT_NAME=results.xml npx playwright test --reporter=junit'
             }
         }
     }
