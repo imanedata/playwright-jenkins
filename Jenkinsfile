@@ -24,13 +24,13 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
+            archiveArtifacts artifacts: 'results.xml', fingerprint: true
             publishHTML(target: [
                 allowMissing: false,
                 alwaysLinkToLastBuild: false,
                 keepAll: true,
                 reportDir: 'playwright-report',
-                reportFiles: 'index.html',
+                reportFiles: 'results.xml',
                 reportName: 'Playwright Report'
             ])
         }
