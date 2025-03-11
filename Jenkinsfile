@@ -15,6 +15,7 @@ pipeline {
                 git 'https://github.com/eroshenkoam/allure-example.git'
                 sh './gradlew clean test'
             }
+        } // <-- Added missing closing bracket here
 
         stage('run tests') {
             steps {
@@ -44,8 +45,7 @@ pipeline {
                 reportFiles: 'results.xml',
                 reportName: 'Playwright Report'
             ])
-            allure includeProperties:
-            false,
+            allure includeProperties: false,
             jdk: '',
             results: [[path: 'build/allure-results']]
         }
