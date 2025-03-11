@@ -2,6 +2,7 @@ pipeline {
     agent {
         docker {
             image 'mcr.microsoft.com/playwright:v1.51.0-noble'
+            args '--entrypoint=""'
         }
     }
     stages {
@@ -10,14 +11,14 @@ pipeline {
                 sh 'npm ci'
             }
         }
+        stage('Install Allure CLI') {
+            steps {
+                sh 'npm install -g allure-commandline --save-dev'
+            }
+        }
         stage('Run tests') {
             steps {
                 sh 'npx playwright test --reporter=junit,html'
-            }
-        }
-        stage('Génération de rapport JUnit') {
-            steps {
-                sh 'PLAYWRIGHT_JUNIT_OUTPUT_NAME=results.xml npx playwright test --reporter=junit'
             }
         }
         stage('Génération de rapport Allure') {
