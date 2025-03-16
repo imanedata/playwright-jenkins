@@ -1,7 +1,7 @@
 pipeline {
     agent any
     stages {
-        stage('Build and Install') {
+        stage('build and install') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.51.0-noble'
@@ -10,38 +10,22 @@ pipeline {
             steps {
                 script {
                     sh 'npm ci'
-                    
-                    // Installer Allure
-                    sh 'npm install -g allure-commandline'
-
-                    // Exécuter les tests avec Allure comme reporter
                     sh 'npx playwright test --reporter=line,allure-playwright'
-                    
-                    // Vérifier que allure-results existe
-                    sh 'ls -l allure-results || echo "No results found!"'
-                    
-                    // Stasher les résultats
-                    stash name: 'allure-results', includes: 'allure-results/*'
+                    stash name: 'test-results', includes: 'test-results/*'
                 }
             }
         }
     }
     post {
         always {
+            unstash 'test-results' // Extract results
             script {
-                try {
-                    unstash 'allure-results' // Extraire les résultats
-                } catch (Exception e) {
-                    echo "No stash found, skipping unstash step."
-                }
-
-                // Appel correct de la fonction allure avec le bon chemin des résultats
                 allure([
                     includeProperties: false,
                     jdk: '',
                     properties: [],
                     reportBuildPolicy: 'ALWAYS',
-                    results: [[path: 'allure-results']] // Assurez-vous que le bon répertoire est utilisé
+                    results: [[path: 'test-results']]
                 ])
             }
         }
