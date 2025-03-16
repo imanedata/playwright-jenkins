@@ -10,6 +10,7 @@ pipeline {
             steps {
                 script {
                     sh 'npm ci'
+                    sh 'npm install -g allure-commandline'
                     sh 'npx playwright test --reporter=line,allure-playwright'
                     stash name: 'allure-results', includes: 'allure-results/*'
                 }
