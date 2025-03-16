@@ -1,47 +1,69 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.51.0-noble'
+            args '-u root' // Run as root to install Allure and Java
+        }
+    }
     stages {
-        stage('Build and Install') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.51.0-noble'
-                }
-            }
+        stage('Install Java') {
             steps {
                 script {
-                    sh 'npm ci'
-                    
-                    // Installation d'Allure si nécessaire
-                    sh 'npm install -g allure-commandline'
-
-                    // Exécution des tests avec Allure
-                    sh 'npx playwright test --reporter=line,allure-playwright'
-
-                    // Vérification si test-results existe avant de stasher
-                    sh '[ -d test-results ] && echo "Stashing test-results" || echo "No test-results found!"'
-
-                    stash name: 'test-results', includes: 'test-results/*'
+                    // Install OpenJDK 11 (or choose another version as necessary)
+                    sh 'apt-get update && apt-get install -y openjdk-11-jdk'
+                    // Set JAVA_HOME
+                    sh 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+                    sh 'export PATH=$JAVA_HOME/bin:$PATH'
                 }
+            }
+        }
+        stage('Install Allure') {
+            steps {
+                script {
+                    sh 'npm install -g allure-commandline'
+                }
+            }
+        }
+        stage('install dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+        stage('Build') {
+            steps {
+                git 'https://github.com/eroshenkoam/allure-example.git'
+                // Ensure Java is available before running gradle
+                sh './gradlew clean test'
+            }
+        }
+        stage('run tests') {
+            steps {
+                sh 'npx playwright test --reporter=html --output=playwright-report'
+            }
+        }
+        stage('génération de rapport') {
+            steps {
+                sh 'PLAYWRIGHT_JUNIT_OUTPUT_NAME=results.xml npx playwright test --reporter=junit'
+            }
+        }
+        stage('génération de rapport allur') {
+            steps {
+                sh 'allure serve allure-results'
             }
         }
     }
     post {
         always {
-            script {
-                try {
-                    unstash 'test-results' // Extraction des résultats
-                } catch (Exception e) {
-                    echo "No stash found, skipping unstash step."
-                }
-
-                allure([
-                    includeProperties: false,
-                    jdk: '',
-                    properties: [],
-                    reportBuildPolicy: 'ALWAYS',
-                    results: [[path: 'test-results']]
-                ])
-            }
+            archiveArtifacts artifacts: 'results.xml', fingerprint: true
+            publishHTML(target: [
+                allowMissing: false,
+                alwaysLinkToLastBuild: false,
+                keepAll: true,
+                reportDir: 'playwright-report',
+                reportFiles: 'index.html',
+                reportName: 'Playwright Report'
+            ])
+            allure includeProperties: false, jdk: '', results: [[path: 'build/allure-results']]
         }
     }
 }
