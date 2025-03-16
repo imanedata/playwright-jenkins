@@ -30,7 +30,7 @@ pipeline {
         always {
             script {
                 try {
-                    unstash 'allure-results' // Extraire les résultats
+                    unstash 'test-results' // Extraire les résultats
                 } catch (Exception e) {
                     echo "No stash found, skipping unstash step."
                 }
@@ -40,7 +40,7 @@ pipeline {
                     jdk: '',
                     properties: [],
                     reportBuildPolicy: 'ALWAYS',
-                    results: [[path: 'allure-results']]
+                    results: [[path: 'test-results']]
                 ])
             }
         }
