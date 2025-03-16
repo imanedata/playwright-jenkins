@@ -30,17 +30,18 @@ pipeline {
         always {
             script {
                 try {
-                    unstash 'test-results' // Extraire les résultats
+                    unstash 'allure-results' // Extraire les résultats
                 } catch (Exception e) {
                     echo "No stash found, skipping unstash step."
                 }
 
+                // Appel correct de la fonction allure avec le bon chemin des résultats
                 allure([
                     includeProperties: false,
                     jdk: '',
                     properties: [],
                     reportBuildPolicy: 'ALWAYS',
-                    results: [[path: 'test-results']]
+                    results: [[path: 'allure-results']] // Assurez-vous que le bon répertoire est utilisé
                 ])
             }
         }
